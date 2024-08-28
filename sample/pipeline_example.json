@@ -1,0 +1,20 @@
+{
+    "version": 0,
+    "name": "pipeline_example",
+    "runtime": "python",
+    "graph": ["(UpperText ReverseText)"],
+    "parameters": {},
+    "elements": [
+        {
+           "name": "UpperText",
+           "input": [{"name": "text", "type": "str"}],
+           "output": [{"name": "upper_case_text", "type": "str"}],
+           "deploy": {"local": {"module": "pipeline_example.py"}} 
+        }, {
+            "name": "ReverseText",
+            "input": [{"name": "upper_case_text", "type": "str"}],
+            "output": [{"name": "reversed_text", "type": "str"}],
+            "deploy": {"local": {"module": "pipeline_example.py"}} 
+        }
+    ]
+}
