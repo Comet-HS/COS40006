@@ -1,0 +1,20 @@
+{
+    "version": 0,
+    "name": "speech_to_text_pipeline",
+    "runtime": "python",
+    "graph": ["(AudioInput SpeechToText)"],
+    "parameters": {},
+    "elements": [
+        {
+            "name": "AudioInput",
+            "input": [],
+            "output": [{"name": "audio_data", "type": "bytes"}],
+            "deploy": {"local": {"module": "pipeline_speech.py"}}
+        }, {
+            "name": "SpeechToText",
+            "input": [{"name": "audio_data", "type": "bytes"}],
+            "output": [{"name": "recognized_text", "type": "str"}],
+            "deploy": {"local": {"module": "pipeline_speech.py"}}
+        }
+    ]
+}
