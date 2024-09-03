@@ -1,34 +1,58 @@
 import speech_recognition as sr
+from googletrans import Translator
 
-def recognize_speech_from_mic():
-    # Initialize recognizer
+def recognize_speech_from_mic(language="en"):
+    # Initialize recognizer and translator
     recognizer = sr.Recognizer()
+    translator = Translator()
 
     # Set up microphone as the audio source
     with sr.Microphone() as source:
         # Adjust for ambient noise to improve recognition
         print("Adjusting for ambient noise, please wait...")
-        recognizer.adjust_for_ambient_noise(source, duration=1)
+        recognizer.adjust_for_ambient_noise(source, duration=0.5)  # Shorter adjustment time
         print("Listening for speech...")
 
-        # Capture audio from the microphone
-        audio = recognizer.listen(source)
-
-        # Convert audio input from speech to text)
+        # Capture audio from the microphone with a timeout and phrase time limit
         try:
-            text = recognizer.recognize_google(audio)
-            print(f"Recognized text: {text}")
-            return text
+            audio = recognizer.listen(source, timeout=5, phrase_time_limit=10)  # Set timeouts
+            # Convert audio input from speech to text with specified language
+            text = recognizer.recognize_google(audio, language=language)
+            print(f"Recognized text in {language}: {text}")
+            
+            # Translate the recognized text to English
+            translated_text = translator.translate(text, src=language, dest='en').text
+            print(f"Translated text: {translated_text}")
+            return translated_text
+        except sr.WaitTimeoutError:
+            print("Listening timed out while waiting for phrase to start.")
+            return None
         except sr.UnknownValueError:
             print("Could not understand the audio.")
             return None
-        except sr.RequestError:
-            print("Could not request results from Google Speech Recognition service.")
+        except sr.RequestError as e:
+            print(f"Could not request results from Google Speech Recognition service; {e}")
+            return None
+        except ValueError as e:
+            print(f"Translation error: {e}")
             return None
 
 if __name__ == "__main__":
-    while True:
-        recognized_text = recognize_speech_from_mic()
-        if recognized_text:
-            # send text to other modules, notification, emotion detection, etc.
-            pass
+    print("Enter the language code (e.g., 'en' for English, 'es' for Spanish, 'bn' for Bangla (Bengali)): ")
+    language_code = input("Language code: ")
+
+    # Validation for common language codes
+    supported_languages = ['en', 'es', 'bn']  # Add more codes as needed
+    if language_code not in supported_languages:
+        print(f"Unsupported language code '{language_code}'. Please use one of: {supported_languages}")
+    else:
+        while True:
+            recognized_text = recognize_speech_from_mic(language=language_code)
+            if recognized_text:
+                # Send text to other modules, notifications, emotion detection, etc.
+                # Exit loop if user says "exit" or "stop" in the selected language
+                if recognized_text.lower() in ["exit", "stop"]:
+                    print("Exiting the speech recognition loop.")
+                    break
+                else:
+                    print(f"Processing recognized text: {recognized_text}")

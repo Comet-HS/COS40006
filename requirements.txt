@@ -18,7 +18,7 @@ pillow==10.2.0
 PyAudio==0.2.14
 pyfiglet==1.0.2
 pyperclip==1.8.2
-pywin32==306
+pywin32==306; platform_system == "Windows"
 requests==2.31.0
 schedule==1.2.2
 six==1.16.0
@@ -29,3 +29,4 @@ urllib3==2.2.2
 wcwidth==0.2.13
 Werkzeug==3.0.4
 wrapt==1.16.0
+
