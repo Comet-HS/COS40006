@@ -1,7 +1,7 @@
 import speech_recognition as sr
 from googletrans import Translator
 
-def recognize_speech_from_mic(language="en"):
+def recognize_speech_from_mic(language="en-US"):
     # Initialize recognizer and translator
     recognizer = sr.Recognizer()
     translator = Translator()
@@ -33,26 +33,18 @@ def recognize_speech_from_mic(language="en"):
         except sr.RequestError as e:
             print(f"Could not request results from Google Speech Recognition service; {e}")
             return None
-        except ValueError as e:
-            print(f"Translation error: {e}")
-            return None
 
 if __name__ == "__main__":
-    print("Enter the language code (e.g., 'en' for English, 'es' for Spanish, 'bn' for Bangla (Bengali)): ")
+    print("Enter the language code (e.g., 'en-US' for English, 'es-ES' for Spanish, 'bn-BD' for Bangla (Bengali)): ")
     language_code = input("Language code: ")
 
-    # Validation for common language codes
-    supported_languages = ['en', 'es', 'bn']  # Add more codes as needed
-    if language_code not in supported_languages:
-        print(f"Unsupported language code '{language_code}'. Please use one of: {supported_languages}")
-    else:
-        while True:
-            recognized_text = recognize_speech_from_mic(language=language_code)
-            if recognized_text:
-                # Send text to other modules, notifications, emotion detection, etc.
-                # Exit loop if user says "exit" or "stop" in the selected language
-                if recognized_text.lower() in ["exit", "stop"]:
-                    print("Exiting the speech recognition loop.")
-                    break
-                else:
-                    print(f"Processing recognized text: {recognized_text}")
+    while True:
+        recognized_text = recognize_speech_from_mic(language=language_code)
+        if recognized_text:
+            # Send text to other modules, notifications, emotion detection, etc.
+            # Exit loop if user says "exit" or "stop" in the selected language
+            if recognized_text.lower() in ["exit", "stop"]:
+                print("Exiting the speech recognition loop.")
+                break
+            else:
+                print(f"Processing recognized text: {recognized_text}")
