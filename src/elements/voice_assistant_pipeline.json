@@ -1,0 +1,51 @@
+{
+  "version": 0,
+  "name": "voice_assistant_pipeline",
+  "runtime": "python",
+  "graph": [
+    "(SpeechToTextElement LLMRouterElement)",
+    "(LLMRouterElement ReminderSubsystemElement EmotionDetectionElement TextToSpeechElement)"
+  ],
+  "parameters": {
+    "input_audio": "set a reminder for tomorrow"
+  },
+  "elements": [
+    {
+      "name": "SpeechToTextElement",
+      "input": [{"name": "audio", "type": "str"}],
+      "output": [{"name": "text", "type": "str"}],
+      "deploy": {"local": {"module": "speech_to_text_element.py"}},
+      "parameters": {
+        "audio": "{input_audio}"
+      }
+    },
+    {
+      "name": "LLMRouterElement",
+      "input": [{"name": "text", "type": "str"}],
+      "output": [
+        {"name": "reminder_text", "type": "str"},
+        {"name": "emotion_text", "type": "str"},
+        {"name": "general_text", "type": "str"}
+      ],
+      "deploy": {"local": {"module": "llm_router_element.py"}}
+    },
+    {
+      "name": "ReminderSubsystemElement",
+      "input": [{"name": "reminder_text", "type": "str"}],
+      "output": [{"name": "processed_reminder", "type": "str"}],
+      "deploy": {"local": {"module": "reminder_subsystem_element.py"}}
+    },
+    {
+      "name": "EmotionDetectionElement",
+      "input": [{"name": "emotion_text", "type": "str"}],
+      "output": [{"name": "detected_emotion", "type": "str"}],
+      "deploy": {"local": {"module": "emotion_detection_element.py"}}
+    },
+    {
+      "name": "TextToSpeechElement",
+      "input": [{"name": "text", "type": "str"}],
+      "output": [{"name": "speech_output", "type": "str"}],
+      "deploy": {"local": {"module": "text_to_speech_element.py"}}
+    }
+  ]
+}
