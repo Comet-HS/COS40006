@@ -20,6 +20,12 @@
             <button class="button" type="submit">New Reminder</button>
         </form>
 
+        <form action="/set_reminder" method="post">
+            <input type="text" name="text" placeholder="Reminder Text">
+            <input type="datetime-local" name="time">
+            <button type="submit">Set Reminder</button>
+        </form>        
+
         <div class="assistant-box">
             <form action="{{ url_for('ask_assistant') }}" method="post">
                 <input type="text" name="assistant_question" placeholder="Assistant: How do I make a doctor appointment" required>
