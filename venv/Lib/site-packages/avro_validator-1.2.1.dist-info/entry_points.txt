@@ -1,0 +1,2 @@
+[console_scripts]
+avro_validator = avro_validator.cli:main
