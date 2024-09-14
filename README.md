@@ -5,28 +5,28 @@ In this project we aim to create a system with 2 main functions including a remi
 
 # Installation
 
-1. Clone the repository
+### 1. Clone the repository
 
 ```
 git clone https://github.com/Comet-HS/COS40006.git
 ```
 
-2. Set up your virtual environment
+### 2. Set up your virtual environment
 
-navigate to the project repository
+Navigate to the project repository
 
 ```
 cd (path)/cos40006
 ```
 
-set up virtual environment
+Set up virtual environment
 ```
-python -m venv venv # first time only
-./venv/scripts/activate # Windows
-source venv/bin/activate # macOS/Linux
+python -m venv venv         # first time only
+./venv/scripts/activate     # Windows
+source venv/bin/activate    # macOS/Linux
 ```
 
-3. Install dependencies
+### 3. Install dependencies
 
 ```
 pip install .
@@ -34,7 +34,7 @@ pip install .
 
 # Usage
 
-tbc
+tbd
 
 # Authors
 
