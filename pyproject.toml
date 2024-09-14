@@ -7,11 +7,11 @@ name = "open-source framework for AI agents"
 version = "0.1.0"
 description = "CPTB - final year computer science project"
 authors = [
-    { name="Henry Sutton", email="103072963@student.swin.edu.au" }
-    { name="Rafsun Al Mujib", email="103840186@student.swin.edu.au" }
-    { name="Raitha Mehjabeen", email="103804629@student.swin.edu.au" }
-    { name="Kazi Talha", email="103805790@student.swin.edu.au" }
-    { name="Ankur Saha", email="103486797@student.swin.edu.au" }
+    { name="Henry Sutton", email="103072963@student.swin.edu.au" },
+    { name="Rafsun Al Mujib", email="103840186@student.swin.edu.au" },
+    { name="Raitha Mehjabeen", email="103804629@student.swin.edu.au" },
+    { name="Kazi Talha", email="103805790@student.swin.edu.au" },
+    { name="Ankur Saha", email="103486797@student.swin.edu.au" },
     { name="MD Riaz Uddin", email="103802843@student.swin.edu.au" }
 ]
 
