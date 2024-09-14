@@ -38,9 +38,9 @@ tbd
 
 # Authors
 
-    Henry Sutton: 103072963@student.swin.edu.au
-    Rafsun Al Mujib: 103840186@student.swin.edu.au 
-    Raitha Mehjabeen: 103804629@student.swin.edu.au
-    Kazi Talha: 103805790@student.swin.edu.au
-    Ankur Saha: 103486797@student.swin.edu.au
-    MD Riaz Uddin: 103802843@student.swin.edu.au
+* Henry Sutton: 103072963@student.swin.edu.au
+* Rafsun Al Mujib: 103840186@student.swin.edu.au 
+* Raitha Mehjabeen: 103804629@student.swin.edu.au
+* Kazi Talha: 103805790@student.swin.edu.au
+* Ankur Saha: 103486797@student.swin.edu.au
+* MD Riaz Uddin: 103802843@student.swin.edu.au
