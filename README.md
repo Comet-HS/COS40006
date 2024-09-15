@@ -29,7 +29,7 @@ source venv/bin/activate    # macOS/Linux
 ### 3. Install dependencies
 
 ```
-pip install .
+pip install -e .
 ```
 
 # Usage
