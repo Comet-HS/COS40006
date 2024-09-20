@@ -2,14 +2,14 @@
     "version": 0,
     "name": "emotion_detection_pipeline",
     "runtime": "python", 
-    "graph": ["(emotion_input emotion_detector)"],
+    "graph": ["(EmotionDetectionElement)"],
     "parameters": {},
     "elements": [
         {
-            "name": "emotion_detector",
+            "name": "EmotionDetectionElement",
             "input": [{"name": "emotion_text", "type": "str"}],
             "output": [{"name": "detected_emotion", "type": "str"}],
-            "deploy": {"local": {"module": "emotion_detection_element"}} 
+            "deploy": {"local": {"module": "cos40006.elements.emotion_detection_element"}} 
         }
     ]
 }
