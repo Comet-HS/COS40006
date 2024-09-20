@@ -9,12 +9,12 @@
             "name": "UpperText",
             "input": [{"name": "text", "type": "str"}],
             "output": [{"name": "upper_case_text", "type": "str"}],
-            "deploy": {"local": {"module": "pipeline_example.py"}} 
+            "deploy": {"local": {"module": "cos40006.pipelines.pipeline_example"}} 
         }, {
             "name": "ReverseText",
             "input": [{"name": "upper_case_text", "type": "str"}],
             "output": [{"name": "reversed_text", "type": "str"}],
-            "deploy": {"local": {"module": "pipeline_example.py"}} 
+            "deploy": {"local": {"module": "cos40006.pipelines.pipeline_example"}} 
         }
     ]
 }
