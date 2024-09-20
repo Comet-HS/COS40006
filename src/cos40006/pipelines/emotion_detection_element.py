@@ -7,7 +7,7 @@ class EmotionDetectionElement(aiko.PipelineElement):
         context.set_protocol("emotion:0")
         context.get_implementation("PipelineElement").__init__(self, context)
 
-    def process_frame(self, stream, frame: dict) -> Tuple[aiko.StreamEvent, dict]:
+    def process_frame(self, stream, frame) -> Tuple[aiko.StreamEvent, dict]:
         # Extract emotion_text from the frame
         emotion_text = frame.get("emotion_text", "")
         self.logger.debug(f"received text: {emotion_text}")
