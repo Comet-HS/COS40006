@@ -1,77 +1,52 @@
-import aiko_services as aiko
-from typing import Tuple, Any
-import logging 
 
-class SpeechToTextElement(aiko.PipelineElement):
-    def __init__(self, context):
-        context.set_protocol("speech_to_text:0")
-        super().__init__()
-        self.logger = logging.getLogger(__name__)  # Initialize the logger
-        self.logger.debug("SpeechToTextElement initialized")
+import speech_recognition as sr
+from googletrans import Translator
 
-    def process_frame(self, stream: Any, frame: dict = None, **kwargs) -> Tuple[aiko.StreamEvent, dict]:
-        self.logger.debug(f"SpeechToTextElement process_frame called with: stream={stream}, frame={frame}, kwargs={kwargs}")
-        
-        if frame is None:
-            frame = kwargs
+def recognize_speech_from_mic(language="en-US"):
+    # Initialize recognizer and translator
+    recognizer = sr.Recognizer()
+    translator = Translator()
 
-        audio = frame.get('audio', '')
-        self.logger.debug(f"Processing audio: {audio}")
-        
-        # Simulate speech-to-text conversion
-        text = f"Simulated speech-to-text: {audio}"
-        self.logger.info(f"Converted speech to text: {text}")
-        
-        return aiko.StreamEvent.OKAY, {"text": text}
-    
-    
-    # Dummy implementations of abstract methods
-    def add_message_handler(self, handler):
-        pass
+    # Set up microphone as the audio source
+    with sr.Microphone() as source:
+        # Adjust for ambient noise to improve recognition
+        print("Adjusting for ambient noise, please wait...")
+        recognizer.adjust_for_ambient_noise(source, duration=0.5)  # Shorter adjustment time
+        print("Listening for speech...")
 
-    def add_tags_string(self, tags):
-        pass
+        # Capture audio from the microphone with a timeout and phrase time limit
+        try:
+            audio = recognizer.listen(source, timeout=5, phrase_time_limit=10)  # Set timeouts
+            # Convert audio input from speech to text with specified language
+            text = recognizer.recognize_google(audio, language=language)
+            print(f"Recognized text in {language}: {text}")
+            
+            # Translate the recognized text to English
+            translated_text = translator.translate(text, src=language, dest='en').text
+            print(f"Translated text: {translated_text}")
+            return translated_text
+        except sr.WaitTimeoutError:
+            print("Listening timed out while waiting for phrase to start.")
+            return None
+        except sr.UnknownValueError:
+            print("Could not understand the audio.")
+            return None
+        except sr.RequestError as e:
+            print(f"Could not request results from Google Speech Recognition service; {e}")
+            return None
 
-    def get_stream_parameters(self):
-        return {}
+if __name__ == "__main__":
+    print("Enter the language code (e.g., 'en-US' for English, 'es-ES' for Spanish, 'bn-BD' for Bangla (Bengali)): ")
+    language_code = input("Language code: ")
 
-    def get_tags_string(self):
-        return ""
-
-    def my_id(self):
-        return "id"
-
-    def registrar_handler_call(self):
-        pass
-
-    def remove_message_handler(self, handler):
-        pass
-
-    def run(self):
-        pass
-
-    def set_registrar_handler(self):
-        pass
-
-    def start_stream(self):
-        pass
-    def get_stream(self):
-        pass
-
-    def stop(self):
-        pass
-
-    def stop_stream(self):
-        pass
-    
-    def add_tags(self):
-        pass
-
-    def create_frame(self):
-        return {}
-
-    def create_frames(self):
-        return []
-
-    def get_parameter(self):
-        return None
+    while True:
+        recognized_text = recognize_speech_from_mic(language=language_code)
+        if recognized_text:
+            # Send text to other modules, notifications, emotion detection, etc.
+            # Exit loop if user says "exit" or "stop" in the selected language
+            if recognized_text.lower() in ["exit", "stop"]:
+                print("Exiting the speech recognition loop.")
+                break
+            else:
+                print(f"Processing recognized text: {recognized_text}")
+e

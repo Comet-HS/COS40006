@@ -1,5 +1,6 @@
 import unittest
-from .speech_to_text_element import SpeechToTextElement
+from speech_to_text_element import SpeechToTextElement
+
 from .context import ContextManager
 import aiko_services as aiko
 
