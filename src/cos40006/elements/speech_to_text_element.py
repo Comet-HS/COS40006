@@ -1,52 +1,61 @@
-
+import aiko_services as aiko
 import speech_recognition as sr
 from googletrans import Translator
+from typing import Tuple, Any
 
-def recognize_speech_from_mic(language="en-US"):
-    # Initialize recognizer and translator
-    recognizer = sr.Recognizer()
-    translator = Translator()
+class SpeechToTextElement(aiko.PipelineElement):
+    def __init__(self, context):
+        if context:
+            context.set_protocol("speech_to_text:0")
+            context.get_implementation("PipelineElement").__init__(self, context)
+        self.recognizer = sr.Recognizer()
+        self.translator = Translator()
 
-    # Set up microphone as the audio source
-    with sr.Microphone() as source:
-        # Adjust for ambient noise to improve recognition
-        print("Adjusting for ambient noise, please wait...")
-        recognizer.adjust_for_ambient_noise(source, duration=0.5)  # Shorter adjustment time
-        print("Listening for speech...")
+    def process_frame(self, stream: Any, frame: dict = None, **kwargs) -> Tuple[aiko.StreamEvent, dict]:
+        # Get audio input from the frame
+        audio_input = frame.get("audio_input", None)
+        if not audio_input:
+            self.logger.info("No audio input provided.")
+            return aiko.StreamEvent.OKAY, frame
 
-        # Capture audio from the microphone with a timeout and phrase time limit
+        self.logger.info("Processing audio input...")
+
         try:
-            audio = recognizer.listen(source, timeout=5, phrase_time_limit=10)  # Set timeouts
-            # Convert audio input from speech to text with specified language
-            text = recognizer.recognize_google(audio, language=language)
-            print(f"Recognized text in {language}: {text}")
-            
-            # Translate the recognized text to English
-            translated_text = translator.translate(text, src=language, dest='en').text
-            print(f"Translated text: {translated_text}")
-            return translated_text
-        except sr.WaitTimeoutError:
-            print("Listening timed out while waiting for phrase to start.")
-            return None
+            # Simulate speech recognition (replace this with actual audio processing if needed)
+            recognized_text = self.recognizer.recognize_google(audio_input, language="en-US")
+            translated_text = self.translator.translate(recognized_text, src="en", dest="en").text
+
+            self.logger.info(f"Recognized: {recognized_text}, Translated: {translated_text}")
+            return aiko.StreamEvent.OKAY, {"text_output": translated_text}
+
         except sr.UnknownValueError:
-            print("Could not understand the audio.")
-            return None
+            self.logger.error("Could not understand the audio.")
         except sr.RequestError as e:
-            print(f"Could not request results from Google Speech Recognition service; {e}")
-            return None
+            self.logger.error(f"Speech recognition request failed: {e}")
+
+        return aiko.StreamEvent.OKAY, frame
+
+    # Empty implementations for abstract methods
+    def add_message_handler(self, *args, **kwargs): pass
+    def add_tags(self, *args, **kwargs): pass
+    def add_tags_string(self, *args, **kwargs): pass
+    def create_frame(self, *args, **kwargs): pass
+    def create_frames(self, *args, **kwargs): pass
+    def get_parameter(self, *args, **kwargs): pass
+    def get_stream(self, *args, **kwargs): pass
+    def get_stream_parameters(self, *args, **kwargs): pass
+    def get_tags_string(self, *args, **kwargs): pass
+    def my_id(self, *args, **kwargs): pass
+    def registrar_handler_call(self, *args, **kwargs): pass
+    def remove_message_handler(self, *args, **kwargs): pass
+    def run(self, *args, **kwargs): pass
+    def set_registrar_handler(self, *args, **kwargs): pass
+    def start_stream(self, *args, **kwargs): pass
+    def stop(self, *args, **kwargs): pass
+    def stop_stream(self, *args, **kwargs): pass
 
 if __name__ == "__main__":
-    print("Enter the language code (e.g., 'en-US' for English, 'es-ES' for Spanish, 'bn-BD' for Bangla (Bengali)): ")
-    language_code = input("Language code: ")
-
-    while True:
-        recognized_text = recognize_speech_from_mic(language=language_code)
-        if recognized_text:
-            # Send text to other modules, notifications, emotion detection, etc.
-            # Exit loop if user says "exit" or "stop" in the selected language
-            if recognized_text.lower() in ["exit", "stop"]:
-                print("Exiting the speech recognition loop.")
-                break
-            else:
-                print(f"Processing recognized text: {recognized_text}")
-e
+    # Bypass the context for standalone testing
+    context = None  # Set to None when testing outside the Aiko system
+    element = SpeechToTextElement(context)
+    print("SpeechToTextElement loaded successfully")
