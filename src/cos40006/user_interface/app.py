@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 
-# TODO ...
-# pip install -e .  # at the project top-level
 # cd user_interface
-#
-# export PYTHONPATH=../sample  # TODO: Temporary until pyproject.toml fixed
 # # AIKO_LOG_LEVEL=DEBUG  # optional, default is INFO
 # ./cli_sync.py ../pipeline_ui.json
 
