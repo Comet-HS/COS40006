@@ -37,7 +37,24 @@ class TextToSpeechElement(aiko.PipelineElement):
         self.engine.say(text)  # Queue the speech
         self.engine.runAndWait()  # Play the speech
         
-        
+    # Empty implementations for abstract methods
+    def add_message_handler(self, *args, **kwargs): pass
+    def add_tags(self, *args, **kwargs): pass
+    def add_tags_string(self, *args, **kwargs): pass
+    def create_frame(self, *args, **kwargs): pass
+    def create_frames(self, *args, **kwargs): pass
+    def get_parameter(self, *args, **kwargs): pass
+    def get_stream(self, *args, **kwargs): pass
+    def get_stream_parameters(self, *args, **kwargs): pass
+    def get_tags_string(self, *args, **kwargs): pass
+    def my_id(self, *args, **kwargs): pass
+    def registrar_handler_call(self, *args, **kwargs): pass
+    def remove_message_handler(self, *args, **kwargs): pass
+    def run(self, *args, **kwargs): pass
+    def set_registrar_handler(self, *args, **kwargs): pass
+    def start_stream(self, *args, **kwargs): pass
+    def stop(self, *args, **kwargs): pass
+    def stop_stream(self, *args, **kwargs): pass 
         
 
         
