@@ -1,0 +1,21 @@
+{
+    "version": 0,
+    "name": "text_to_speech_pipeline",
+    "runtime": "python",
+    "graph": ["(TextToSpeechElement)"],
+    "parameters": {
+      "input_text": "Hello this is a test of the text-to-speech element."
+    },
+    "elements": [
+      {
+        "name": "TextToSpeechElement",
+        "input": [{"name": "text", "type": "str"}],
+        "output": [{"name": "speech_output", "type": "str"}],
+        "deploy": {"local": {"module": "text_to_speech_element.py"}},
+        "parameters": {
+          "text": "{input_text}"
+        }
+      }
+    ]
+  }
+  
