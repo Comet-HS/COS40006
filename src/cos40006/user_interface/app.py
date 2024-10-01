@@ -43,7 +43,10 @@ def process_request(pipeline, response_queue, request):
         stream = {"stream_id": STREAM_ID}
         pipeline.process_frame(stream, request)
         response = response_queue.get()[1]
-        parsed_response = json.loads(response['response'])
+        if isinstance(response, dict) and 'response' in response:
+            parsed_response = json.loads(response['response'])
+        else:
+            raise ValueError("Unexpected response format")
         
         # Check if there's a reminder to add
         if parsed_response.get('reminder_details'):
@@ -52,7 +55,7 @@ def process_request(pipeline, response_queue, request):
         return parsed_response
     except Exception as e:
         logger.error(f"Error processing request: {str(e)}", exc_info=True)
-        return {"error": str(e)}
+        return {"error": str(e), "response": "I apologize, but I encountered an error processing your request. Could you please try again?"}
 
 def add_reminder(reminder_details):
     global reminders

@@ -41,15 +41,19 @@
                     success: function(response) {
                         console.log(response);  // Log the response for debugging
                         var parsedResponse = response.response;
-                        $('#chat-container').append('<div class="assistant-message"><span>Assistant:</span> ' + parsedResponse.response + '</div>');
-                        
-                        if (parsedResponse.reminder_details) {
-                            $('#chat-container').append('<div class="system-message">Reminder added.</div>');
-                            updateReminders(response.reminders);
-                        }
-                        
-                        if (parsedResponse.emotion_details) {
-                            $('#chat-container').append('<div class="emotion-message"><span>Emotion detected:</span> ' + parsedResponse.emotion_details.emotion + ' (Confidence: ' + parsedResponse.emotion_details.confidence + ')</div>');
+                        if (parsedResponse.error) {
+                            $('#chat-container').append('<div class="error-message">' + parsedResponse.response + '</div>');
+                        } else {
+                            $('#chat-container').append('<div class="assistant-message"><span>Assistant:</span> ' + parsedResponse.response + '</div>');
+                            
+                            if (parsedResponse.reminder_details) {
+                                $('#chat-container').append('<div class="system-message">Reminder added.</div>');
+                                updateReminders(response.reminders);
+                            }
+                            
+                            if (parsedResponse.emotion_details) {
+                                $('#chat-container').append('<div class="emotion-message"><span>Emotion detected:</span> ' + parsedResponse.emotion_details.emotion + ' (Confidence: ' + parsedResponse.emotion_details.confidence + ')</div>');
+                            }
                         }
                         
                         $('#chat-container').scrollTop($('#chat-container')[0].scrollHeight);

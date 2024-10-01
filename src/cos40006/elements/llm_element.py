@@ -27,7 +27,7 @@ class LLMElement(aiko.PipelineElement):
         For each user input, you MUST:
         1. Determine the intent of the user's request
         2. Provide an appropriate response
-        3. Optionally detect emotions in the user's input when you deem it relevant
+        3. Detect emotions in the user's input when you deem it relevant
         4. ALWAYS respond in the exact JSON format specified below, with no additional text before or after
 
         If the user wants to set a reminder:
@@ -36,7 +36,7 @@ class LLMElement(aiko.PipelineElement):
         3. Provide a confirmation to the user
 
         For emotion detection:
-        1. Include emotion details when you believe it's relevant to the conversation
+        1. Include emotion details when you believe it's relevant
         2. Use a confidence scale of 0-100
 
         ALWAYS respond ONLY in this exact JSON format, with no text before or after:
@@ -84,18 +84,25 @@ class LLMElement(aiko.PipelineElement):
         
         response = self.chat.send_message(full_input)
         try:
-            parsed_response = json.loads(response.text)
+            # Find the first occurrence of '{' and the last occurrence of '}'
+            start = response.text.find('{')
+            end = response.text.rfind('}') + 1
+            if start != -1 and end != -1:
+                json_str = response.text[start:end]
+                parsed_response = json.loads(json_str)
+            else:
+                raise ValueError("No JSON found in the response")
+
             # Validate the response structure
-            assert isinstance(parsed_response, dict)
             assert "reminder_details" in parsed_response
             assert "emotion_details" in parsed_response
             assert "response" in parsed_response
-        except (json.JSONDecodeError, AssertionError):
-            # Fallback in case the LLM doesn't produce valid JSON or expected structure
+        except Exception as e:
             self.logger.warning(f"Invalid LLM response: {response.text}")
+            self.logger.error(f"Error details: {str(e)}")
             parsed_response = {
-                "reminder_details": null,
-                "emotion_details": null,
+                "reminder_details": None,
+                "emotion_details": None,
                 "response": "I apologize, but I encountered an error processing your request. Could you please try again?"
             }
         
