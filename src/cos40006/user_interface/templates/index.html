@@ -3,35 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reminder App</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <title>AI Assistant Chat</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        #chat-container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            height: 400px;
+            overflow-y: scroll;
+        }
+        .user-message {
+            background-color: #e6f2ff;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .assistant-message {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Reminder</h1>
-        <div class="reminder-box">
-            {% for reminder in reminders %}
-                <p>{{ reminder }}</p>
-            {% endfor %}
-        </div>
+    <h1>AI Assistant Chat</h1>
+    <div id="chat-container"></div>
+    <form id="chat-form">
+        <input type="text" id="user-input" placeholder="Type your message here..." required>
+        <button type="submit">Send</button>
+    </form>
 
-        <form action="{{ url_for('new_reminder') }}" method="post">
-            <input type="text" name="new_reminder" placeholder="New Reminder" required>
-            <button class="button" type="submit">New Reminder</button>
-        </form>
+    <script>
+        $(document).ready(function() {
+            $('#chat-form').on('submit', function(e) {
+                e.preventDefault();
+                var userInput = $('#user-input').val();
+                $('#chat-container').append('<div class="user-message">You: ' + userInput + '</div>');
+                $('#user-input').val('');
 
-        <form action="/set_reminder" method="post">
-            <input type="text" name="text" placeholder="Reminder Text">
-            <input type="datetime-local" name="time">
-            <button type="submit">Set Reminder</button>
-        </form>        
+                $.ajax({
+                    url: '/chat',
+                    method: 'POST',
+                    data: { user_input: userInput },
+                    success: function(response) {
+                        var assistantResponse = response.response;
+                        $('#chat-container').append('<div class="assistant-message">Assistant: ' + assistantResponse + '</div>');
 
-        <div class="assistant-box">
-            <form action="{{ url_for('ask_assistant') }}" method="post">
-                <input type="text" name="assistant_question" placeholder="Assistant: How do I make a doctor appointment" required>
-                <button class="button" type="submit">Ask</button>
-            </form>
-        </div>
-    </div>
+                        if (response.reminder_details) {
+                            $('#chat-container').append('<div class="assistant-message">Reminder set: ' + JSON.stringify(response.reminder_details) + '</div>');
+                        }
+                        if (response.emotion_details) {
+                            $('#chat-container').append('<div class="assistant-message">Emotion detected: ' + JSON.stringify(response.emotion_details) + '</div>');
+                        }
+
+                        $('#chat-container').scrollTop($('#chat-container')[0].scrollHeight);
+                    },
+                    error: function() {
+                        $('#chat-container').append('<div class="assistant-message">Error: Unable to process your request.</div>');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
