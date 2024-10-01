@@ -17,6 +17,24 @@ class ReminderSubsystemElement(aiko.PipelineElement):
             self.logger.debug("No reminder_text provided in the frame")
             return aiko.StreamEvent.OKAY, frame  # Pass through the frame
 
-        self.logger.info(f"Processing reminder: {reminder_text}")
-        # Simple reminder processing
-        return aiko.StreamEvent.OKAY, {"processed_reminder": f"Reminder set: {reminder_text}"}
+        # Process the reminder text to remove the leading phrase like "Set a reminder to"
+        stripped_reminder = self.extract_reminder(reminder_text)
+        self.logger.info(f"Reminder set: {stripped_reminder}")
+
+        return aiko.StreamEvent.OKAY, {"processed_reminder": stripped_reminder}
+
+    def extract_reminder(self, reminder_text: str) -> str:
+        """
+        Extract the core reminder from the input text.
+        Example:
+        Input: "Set a reminder to take medicine at 3 PM"
+        Output: "Take medicine at 3 PM"
+        """
+        if reminder_text.lower().startswith("set a reminder to"):
+            return reminder_text[17:].strip().capitalize()
+        return reminder_text.capitalize()
+
+if __name__ == "__main__":
+    context = None  # Simulated context for testing
+    element = ReminderSubsystemElement(context)
+    print("ReminderSubsystemElement loaded successfully")
