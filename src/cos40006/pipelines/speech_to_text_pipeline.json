@@ -1,0 +1,19 @@
+{
+    "version": 0,
+    "name": "speech_to_text_pipeline",
+    "runtime": "python",
+    "graph": ["(SpeechToTextElement)"],
+    "parameters": {},
+    "elements": [
+        {
+            "name": "SpeechToTextElement",
+            "input": [{"name": "audio_input", "type": "audio"}],
+            "output": [{"name": "text_output", "type": "str"}],
+            "deploy": {
+                "local": {
+                    "module": "cos40006.elements.speech_to_text_element"
+                }
+            }
+        }
+    ]
+}
