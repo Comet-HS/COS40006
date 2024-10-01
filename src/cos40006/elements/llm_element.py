@@ -24,32 +24,54 @@ class LLMElement(aiko.PipelineElement):
         3. Answering general questions
         4. Engaging in friendly conversation
 
-        For each user input, you should:
-        1. Determine the intent of the user's request (reminder, emotion, or general)
+        For each user input, you MUST:
+        1. Determine the intent of the user's request
         2. Provide an appropriate response
+        3. Optionally detect emotions in the user's input when you deem it relevant
+        4. ALWAYS respond in the exact JSON format specified below, with no additional text before or after
 
-        If the user wants to set a reminder, you should:
-        1. Ask for the reminder details (e.g. date, time, and what to remind them of) if not already provided
-        2. Store the reminder details
+        If the user wants to set a reminder:
+        1. Ask for any missing reminder details (date, time, and what to remind them of)
+        2. Only set the reminder when all details are provided
         3. Provide a confirmation to the user
 
-        The reminder details should be stored in a structured format, such as a dictionary with keys for the date,
-        time, if it should be repeated, and the reminder details.
-        Do not set reminders without having the full details about the reminder.
+        For emotion detection:
+        1. Include emotion details when you believe it's relevant to the conversation
+        2. Use a confidence scale of 0-100
 
-        You should also be able to detect emotions in text when relevant.
-
-        Always be polite, concise, and helpful. If you're asked to do something 
-        outside your capabilities, kindly explain what you can do instead.
-
-        Do not use emojis in your responses.
-
-        Respond ONLY in the following JSON format, with no additional text before or after:
+        ALWAYS respond ONLY in this exact JSON format, with no text before or after:
         {
-            "reminder_details": {"date": "YYYY-MM-DD", "time": "HH:MM", "repeat": boolean, "details": "string"} or null if not applicable,
-            "emotion_details": {"emotion": "string", "confidence": "string"} or null if not applicable,
+            "reminder_details": {"date": "YYYY-MM-DD", "time": "HH:MM", "repeat": false, "details": "string"} or null if not applicable,
+            "emotion_details": {"emotion": "string", "confidence": number} or null if not applicable,
             "response": "Your response to the user"
         }
+
+        Examples:
+        User: "Hello"
+        Response:
+        {
+            "reminder_details": null,
+            "emotion_details": null,
+            "response": "Hello! I'm your friendly AI assistant. How can I help you today?"
+        }
+
+        User: "Set a reminder for tomorrow at 3pm to call mom"
+        Response:
+        {
+            "reminder_details": {"date": "2024-10-03", "time": "15:00", "repeat": false, "details": "call mom"},
+            "emotion_details": null,
+            "response": "Certainly! I've set a reminder for you to call mom tomorrow at 3:00 PM. Is there anything else you need?"
+        }
+
+        User: "I'm feeling really stressed about my upcoming exam"
+        Response:
+        {
+            "reminder_details": null,
+            "emotion_details": {"emotion": "stressed", "confidence": 90},
+            "response": "I'm sorry to hear that you're feeling stressed about your upcoming exam. It's normal to feel this way. Have you considered some relaxation techniques or creating a study schedule to help manage your stress? Remember, you've prepared for this, and I believe in you!"
+        }
+
+        Always maintain this exact JSON structure in your responses, including emotion detection when you deem it relevant.
         """
         self.chat.send_message(system_prompt)
 
@@ -63,17 +85,23 @@ class LLMElement(aiko.PipelineElement):
         response = self.chat.send_message(full_input)
         try:
             parsed_response = json.loads(response.text)
-        except json.JSONDecodeError:
-            # Fallback in case the LLM doesn't produce valid JSON
+            # Validate the response structure
+            assert isinstance(parsed_response, dict)
+            assert "reminder_details" in parsed_response
+            assert "emotion_details" in parsed_response
+            assert "response" in parsed_response
+        except (json.JSONDecodeError, AssertionError):
+            # Fallback in case the LLM doesn't produce valid JSON or expected structure
+            self.logger.warning(f"Invalid LLM response: {response.text}")
             parsed_response = {
-                "reminder_details": None,
-                "emotion_details": None,
-                "response": response.text
+                "reminder_details": null,
+                "emotion_details": null,
+                "response": "I apologize, but I encountered an error processing your request. Could you please try again?"
             }
         
         self.logger.info(f"LLM response: {parsed_response}")
         
-        return aiko.StreamEvent.OKAY, parsed_response
+        return aiko.StreamEvent.OKAY, {"response": json.dumps(parsed_response)}
 
     def start(self):
         self.logger.info("LLMElement started")

@@ -5,16 +5,20 @@ import os
 import queue
 from threading import Thread
 import logging
+import json
 
 import aiko_services as aiko
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 DEFINITION_PATHNAME = "../pipelines/llm_pipeline.json"
 PIPELINE_NAME = "p_llm"
 STREAM_ID = "*"
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
+
+reminders = []
 
 def create_pipeline(definition_pathname, name):
     if not os.path.exists(definition_pathname):
@@ -39,13 +43,26 @@ def process_request(pipeline, response_queue, request):
         stream = {"stream_id": STREAM_ID}
         pipeline.process_frame(stream, request)
         response = response_queue.get()[1]
+        parsed_response = json.loads(response['response'])
+        
+        # Check if there's a reminder to add
+        if parsed_response.get('reminder_details'):
+            add_reminder(parsed_response['reminder_details'])
+        
+        return parsed_response
     except Exception as e:
-        response = {"error": str(e)}
-    return response
+        logger.error(f"Error processing request: {str(e)}", exc_info=True)
+        return {"error": str(e)}
+
+def add_reminder(reminder_details):
+    global reminders
+    formatted_reminder = f"{reminder_details['date']} {reminder_details['time']}: {reminder_details['details']}"
+    reminders.append(formatted_reminder)
+    logger.info(f"Added reminder: {formatted_reminder}")
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', reminders=reminders)
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -53,7 +70,7 @@ def chat():
     if user_input:
         pipeline, response_queue = app.config["pipeline"]
         result = process_request(pipeline, response_queue, {"text": user_input})
-        return jsonify(result)
+        return jsonify({"response": result, "reminders": reminders})
     return jsonify({"error": "No input provided"}), 400
 
 if __name__ == '__main__':

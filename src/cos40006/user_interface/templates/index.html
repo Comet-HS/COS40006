@@ -4,44 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Assistant Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        #chat-container {
-            width: 80%;
-            margin: 0 auto;
-            padding: 20px;
-            border: 1px solid #ccc;
-            height: 400px;
-            overflow-y: scroll;
-        }
-        .user-message {
-            background-color: #e6f2ff;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
-        }
-        .assistant-message {
-            background-color: #f0f0f0;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
-        }
-    </style>
 </head>
 <body>
-    <h1>AI Assistant Chat</h1>
-    <div id="chat-container"></div>
-    <form id="chat-form">
-        <input type="text" id="user-input" placeholder="Type your message here..." required>
-        <button type="submit">Send</button>
-    </form>
+    <div class="container">
+        <h1>AI Assistant Chat</h1>
+        <div id="chat-container"></div>
+        <form id="chat-form">
+            <input type="text" id="user-input" name="user_input" placeholder="Type your message here..." required>
+            <button type="submit">Send</button>
+        </form>
+        <div id="reminders-container">
+            <h2>Reminders</h2>
+            <ul id="reminders-list">
+                {% for reminder in reminders %}
+                    <li>{{ reminder }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
 
     <script>
         $(document).ready(function() {
             $('#chat-form').on('submit', function(e) {
                 e.preventDefault();
                 var userInput = $('#user-input').val();
-                $('#chat-container').append('<div class="user-message">You: ' + userInput + '</div>');
+                $('#chat-container').append('<div class="user-message"><span>You:</span> ' + userInput + '</div>');
                 $('#user-input').val('');
 
                 $.ajax({
@@ -49,23 +39,33 @@
                     method: 'POST',
                     data: { user_input: userInput },
                     success: function(response) {
-                        var assistantResponse = response.response;
-                        $('#chat-container').append('<div class="assistant-message">Assistant: ' + assistantResponse + '</div>');
-
-                        if (response.reminder_details) {
-                            $('#chat-container').append('<div class="assistant-message">Reminder set: ' + JSON.stringify(response.reminder_details) + '</div>');
+                        console.log(response);  // Log the response for debugging
+                        var parsedResponse = response.response;
+                        $('#chat-container').append('<div class="assistant-message"><span>Assistant:</span> ' + parsedResponse.response + '</div>');
+                        
+                        if (parsedResponse.reminder_details) {
+                            $('#chat-container').append('<div class="system-message">Reminder added.</div>');
+                            updateReminders(response.reminders);
                         }
-                        if (response.emotion_details) {
-                            $('#chat-container').append('<div class="assistant-message">Emotion detected: ' + JSON.stringify(response.emotion_details) + '</div>');
+                        
+                        if (parsedResponse.emotion_details) {
+                            $('#chat-container').append('<div class="emotion-message"><span>Emotion detected:</span> ' + parsedResponse.emotion_details.emotion + ' (Confidence: ' + parsedResponse.emotion_details.confidence + ')</div>');
                         }
-
+                        
                         $('#chat-container').scrollTop($('#chat-container')[0].scrollHeight);
                     },
                     error: function() {
-                        $('#chat-container').append('<div class="assistant-message">Error: Unable to process your request.</div>');
+                        $('#chat-container').append('<div class="error-message">Error: Unable to process your request.</div>');
                     }
                 });
             });
+
+            function updateReminders(reminders) {
+                $('#reminders-list').empty();
+                reminders.forEach(function(reminder) {
+                    $('#reminders-list').append('<li>' + reminder + '</li>');
+                });
+            }
         });
     </script>
 </body>
