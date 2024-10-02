@@ -48,6 +48,7 @@ aiko_dashboard
 
 
 Current deployment:
+currently only tested using bash terminal
 
 currently utilises gemini LLM. This requires user to have an API key to host. 
 One can be acquired from https://aistudio.google.com/app/apikey
@@ -55,7 +56,19 @@ Requires a google account. Save your API key.
 
 In a new terminal, navigate to the path:
 ../cos40006/src/cos40006/user_interface
-run 
+FIRST, define your API key with the following command. This needs to be repeated each time it is run.
+```
+export API_KEY="your api key"   # BASH
+```
+
+# EXPERIMENTAL #
+```
+set API_KEY="your api key'      # POWERSHELL temp
+setx API_KEY="your api key"     # POWERSHELL permanent
+```
+
+Once you have defined your api key
+run the application
 ```
 python app.py
 ```
