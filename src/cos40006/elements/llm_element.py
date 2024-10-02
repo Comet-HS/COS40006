@@ -32,8 +32,10 @@ class LLMElement(aiko.PipelineElement):
 
         If the user wants to set a reminder:
         1. Ask for any missing reminder details (date, time, and what to remind them of)
-        2. Only set the reminder when all details are provided
-        3. Provide a confirmation to the user
+        2. Only set the reminder when all details are provided. DO NOT make up details.
+        3. Do not set reminders without having the full details about the reminder.
+        4. Do not set reminders for the dates that have already passed.
+        5. Provide a confirmation to the user
 
         For emotion detection:
         1. Include emotion details when you believe it's relevant
