@@ -2,18 +2,34 @@
     "version": 0,
     "name": "speech_to_text_pipeline",
     "runtime": "python",
-    "graph": ["(SpeechToTextElement)"],
+    "graph": ["(SpeechToTextElement ConsoleOutputElement)"],
     "parameters": {},
     "elements": [
-        {
-            "name": "SpeechToTextElement",
-            "input": [{"name": "audio_input", "type": "audio"}],
-            "output": [{"name": "text_output", "type": "str"}],
-            "deploy": {
-                "local": {
-                    "module": "cos40006.elements.speech_to_text_element"
-                }
-            }
+      {
+        "name": "SpeechToTextElement",
+        "input": [
+          {"name": "audio", "type": "bytes"}
+        ],
+        "output": [
+          {"name": "text_output", "type": "str"},
+          {"name": "emotion_output", "type": "str"},
+          {"name": "reminder_output", "type": "str"}
+        ],
+        "deploy": {
+          "local": {"module": "cos40006.elements.speech_to_text_element"}
         }
+      },
+      {
+        "name": "ConsoleOutputElement",
+        "input": [
+          {"name": "text_output", "type": "str"},
+          {"name": "emotion_output", "type": "str"},
+          {"name": "reminder_output", "type": "str"}
+        ],
+        "output": [],
+        "deploy": {
+          "local": {"module": "cos40006.elements.console_output_element"}
+        }
+      }
     ]
 }
