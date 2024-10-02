@@ -1,7 +1,12 @@
 import aiko_services as aiko
 import speech_recognition as sr
-from googletrans import Translator
-from typing import Tuple, Any
+import logging
+
+# Initialize logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+logger.debug("speech_to_text_element.py has been loaded successfully.")
 
 class SpeechToTextElement(aiko.PipelineElement):
     def __init__(self, context):
@@ -9,53 +14,28 @@ class SpeechToTextElement(aiko.PipelineElement):
             context.set_protocol("speech_to_text:0")
             context.get_implementation("PipelineElement").__init__(self, context)
         self.recognizer = sr.Recognizer()
-        self.translator = Translator()
 
-    def process_frame(self, stream: Any, frame: dict = None, **kwargs) -> Tuple[aiko.StreamEvent, dict]:
-        # Get audio input from the frame
-        audio_input = frame.get("audio_input", None)
-        if not audio_input:
-            self.logger.info("No audio input provided.")
-            return aiko.StreamEvent.OKAY, frame
-
-        self.logger.info("Processing audio input...")
-
+    def process_frame(self, stream, frame=None, **kwargs):
+        logger.debug("Processing frame in SpeechToTextElement.")
         try:
-            # Simulate speech recognition (replace this with actual audio processing if needed)
-            recognized_text = self.recognizer.recognize_google(audio_input, language="en-US")
-            translated_text = self.translator.translate(recognized_text, src="en", dest="en").text
+            # Listen to microphone input
+            with sr.Microphone() as source:
+                logger.debug("Adjusting for ambient noise...")
+                self.recognizer.adjust_for_ambient_noise(source)
+                logger.debug("Listening for speech...")
+                audio_data = self.recognizer.listen(source)
 
-            self.logger.info(f"Recognized: {recognized_text}, Translated: {translated_text}")
-            return aiko.StreamEvent.OKAY, {"text_output": translated_text}
+                # Convert speech to text using Google Web API
+                recognized_text = self.recognizer.recognize_google(audio_data, language="en-US")
+                logger.debug(f"Recognized text: {recognized_text}")
 
-        except sr.UnknownValueError:
-            self.logger.error("Could not understand the audio.")
-        except sr.RequestError as e:
-            self.logger.error(f"Speech recognition request failed: {e}")
+                # Return the recognized text
+                return aiko.StreamEvent.OKAY, {"text_output": recognized_text}
 
-        return aiko.StreamEvent.OKAY, frame
+        except Exception as e:
+            logger.error(f"Error processing frame: {e}")
+            return aiko.StreamEvent.ERROR, frame
 
-    # Empty implementations for abstract methods
-    def add_message_handler(self, *args, **kwargs): pass
-    def add_tags(self, *args, **kwargs): pass
-    def add_tags_string(self, *args, **kwargs): pass
-    def create_frame(self, *args, **kwargs): pass
-    def create_frames(self, *args, **kwargs): pass
-    def get_parameter(self, *args, **kwargs): pass
-    def get_stream(self, *args, **kwargs): pass
-    def get_stream_parameters(self, *args, **kwargs): pass
-    def get_tags_string(self, *args, **kwargs): pass
-    def my_id(self, *args, **kwargs): pass
-    def registrar_handler_call(self, *args, **kwargs): pass
-    def remove_message_handler(self, *args, **kwargs): pass
-    def run(self, *args, **kwargs): pass
-    def set_registrar_handler(self, *args, **kwargs): pass
-    def start_stream(self, *args, **kwargs): pass
-    def stop(self, *args, **kwargs): pass
-    def stop_stream(self, *args, **kwargs): pass
-
-if __name__ == "__main__":
-    # Bypass the context for standalone testing
-    context = None  # Set to None when testing outside the Aiko system
-    element = SpeechToTextElement(context)
-    print("SpeechToTextElement loaded successfully")
+# Required method for Aiko framework
+def get_implementations():
+    return {"SpeechToTextElement": SpeechToTextElement}
