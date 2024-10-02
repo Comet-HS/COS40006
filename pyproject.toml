@@ -47,6 +47,7 @@ dependencies = [
     "PyAudio==0.2.14",
     "pyfiglet==1.0.2",
     "pyperclip==1.8.2",
+    "pyttx==2.97",
     "pywin32==306",
     "requests==2.31.0",
     "rfc3986==1.5.0",
