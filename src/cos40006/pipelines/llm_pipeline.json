@@ -18,11 +18,7 @@
     {
       "name": "LLMElement",
       "input": [{"name": "text", "type": "str"}],
-      "output": [
-        {"name": "reminder_details", "type": "dict"},
-        {"name": "emotion_details", "type": "dict"},
-        {"name": "response", "type": "str"}
-      ],
+      "output": [{"name": "response", "type": "str"}],
       "deploy": {"local": {"module": "cos40006.elements.llm_element"}},
       "parameters": {
         "text": "{input_text}"

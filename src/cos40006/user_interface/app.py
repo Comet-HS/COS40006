@@ -42,17 +42,9 @@ def process_request(pipeline, response_queue, request):
     try:
         stream = {"stream_id": STREAM_ID}
         pipeline.process_frame(stream, request)
-        response = response_queue.get()[1]
-        if isinstance(response, dict) and 'response' in response:
-            parsed_response = json.loads(response['response'])
-        else:
-            raise ValueError("Unexpected response format")
-        
-        # Check if there's a reminder to add
-        if parsed_response.get('reminder_details'):
-            add_reminder(parsed_response['reminder_details'])
-        
-        return parsed_response
+        result = response_queue.get()[1]
+        logger.info(f"Raw result from pipeline: {result}")
+        return result
     except Exception as e:
         logger.error(f"Error processing request: {str(e)}", exc_info=True)
         return {"error": str(e), "response": "I apologize, but I encountered an error processing your request. Could you please try again?"}
@@ -69,11 +61,14 @@ def index():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    user_input = request.form.get('user_input')
+    user_input = request.json.get('user_input')
+    logger.info(f"Received user input: {user_input}")
     if user_input:
         pipeline, response_queue = app.config["pipeline"]
         result = process_request(pipeline, response_queue, {"text": user_input})
-        return jsonify({"response": result, "reminders": reminders})
+        logger.info(f"Sending response: {result}")
+        return jsonify(result)
+    logger.warning("No input provided")
     return jsonify({"error": "No input provided"}), 400
 
 if __name__ == '__main__':

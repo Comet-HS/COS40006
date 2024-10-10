@@ -37,39 +37,30 @@
                 $.ajax({
                     url: '/chat',
                     method: 'POST',
-                    data: { user_input: userInput },
+                    contentType: 'application/json',
+                    data: JSON.stringify({ user_input: userInput }),
                     success: function(response) {
-                        console.log(response);  // Log the response for debugging
-                        var parsedResponse = response.response;
-                        if (parsedResponse.error) {
-                            $('#chat-container').append('<div class="error-message">' + parsedResponse.response + '</div>');
-                        } else {
-                            $('#chat-container').append('<div class="assistant-message"><span>Assistant:</span> ' + parsedResponse.response + '</div>');
-                            
-                            if (parsedResponse.reminder_details) {
-                                $('#chat-container').append('<div class="system-message">Reminder added.</div>');
-                                updateReminders(response.reminders);
+                        console.log("Full server response:", response);
+                        try {
+                            var parsedResponse = JSON.parse(response.response);
+                            if (parsedResponse.error) {
+                                $('#chat-container').append('<div class="error-message">' + parsedResponse.response + '</div>');
+                            } else {
+                                $('#chat-container').append('<div class="assistant-message"><span>Assistant:</span> ' + parsedResponse.response + '</div>');
                             }
-                            
-                            if (parsedResponse.emotion_details) {
-                                $('#chat-container').append('<div class="emotion-message"><span>Emotion detected:</span> ' + parsedResponse.emotion_details.emotion + ' (Confidence: ' + parsedResponse.emotion_details.confidence + ')</div>');
-                            }
+                        } catch (e) {
+                            console.error("Error parsing response:", e);
+                            $('#chat-container').append('<div class="error-message">Error: Unable to parse response</div>');
                         }
-                        
                         $('#chat-container').scrollTop($('#chat-container')[0].scrollHeight);
                     },
-                    error: function() {
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        console.error("AJAX error:", textStatus, errorThrown);
+                        console.error("Response text:", jqXHR.responseText);
                         $('#chat-container').append('<div class="error-message">Error: Unable to process your request.</div>');
                     }
                 });
             });
-
-            function updateReminders(reminders) {
-                $('#reminders-list').empty();
-                reminders.forEach(function(reminder) {
-                    $('#reminders-list').append('<li>' + reminder + '</li>');
-                });
-            }
         });
     </script>
 </body>

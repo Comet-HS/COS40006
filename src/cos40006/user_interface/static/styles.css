@@ -21,36 +21,38 @@ h1 {
 
 #chat-container {
     height: 400px;
-    overflow-y: scroll;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
     padding: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
-.user-message, .assistant-message, .emotion-message, .error-message {
+.user-message, .assistant-message, .error-message, .system-message, .emotion-message {
     margin: 10px 0;
     padding: 10px;
-    border-radius: 18px;
-    max-width: 80%;
+    border-radius: 5px;
 }
 
 .user-message {
     background-color: #e3f2fd;
-    margin-left: auto;
     text-align: right;
 }
 
 .assistant-message {
-    background-color: #f1f3f4;
-}
-
-.emotion-message {
-    background-color: #fff9c4;
+    background-color: #f1f8e9;
 }
 
 .error-message {
     background-color: #ffcdd2;
+}
+
+.system-message {
+    background-color: #fff9c4;
+    font-style: italic;
+}
+
+.emotion-message {
+    background-color: #e1bee7;
 }
 
 .user-message span, .assistant-message span, .emotion-message span {
