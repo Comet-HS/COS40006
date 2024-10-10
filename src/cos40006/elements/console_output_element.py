@@ -2,28 +2,18 @@ import aiko_services as aiko
 import logging
 
 # Initialize logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-logger.debug("console_output_element.py has been loaded successfully.")
 
 class ConsoleOutputElement(aiko.PipelineElement):
     def __init__(self, context):
-        if context:
-            context.set_protocol("console_output:0")
-            context.get_implementation("PipelineElement").__init__(self, context)
-        logger.debug("ConsoleOutputElement initialized.")
+        context.set_protocol("console_output:0")
+        super().__init__(context)
+        logger.info("ConsoleOutputElement initialized.")
 
     def process_frame(self, stream, frame=None, **kwargs):
-        logger.debug("Processing frame in ConsoleOutputElement.")
-        text_output = frame.get("text_output", "")
-        emotion_output = frame.get("emotion_output", "")
-        reminder_output = frame.get("reminder_output", "")
-        
-        # Print the outputs to the console
-        print(f"Recognized Text: {text_output}")
-        print(f"Detected Emotion: {emotion_output}")
-        print(f"Reminder Output: {reminder_output}")
+        logger.info(f"Received frame: {frame}")
+        print(f"Console Output - Recognized: {frame.get('recognized_text')}, Translated: {frame.get('translated_text')}")
         return aiko.StreamEvent.OKAY, frame
 
 # Required method for Aiko framework

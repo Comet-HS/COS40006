@@ -34,7 +34,51 @@ pip install -e .
 
 # Usage
 
-tbd
+Environment initialization:
+Enable virtual environment in every terminal as shown above
+
+In root folder, run this command.
+```
+aiko_registrar
+```
+if you want to monitor your processes, also run this command in a second terminal.
+```
+aiko_dashboard
+```
+
+
+Current deployment:
+currently only tested using bash terminal
+
+currently utilises gemini LLM. This requires user to have an API key to host. 
+One can be acquired from https://aistudio.google.com/app/apikey
+Requires a google account. Save your API key.
+
+In a new terminal, navigate to the path:
+../cos40006/src/cos40006/user_interface
+FIRST, define your API key with the following command. This needs to be repeated each time it is run.
+```
+export API_KEY="your api key"   # BASH
+```
+
+# EXPERIMENTAL #
+```
+set API_KEY="your api key'      # POWERSHELL temp
+setx API_KEY="your api key"     # POWERSHELL permanent
+```
+
+Once you have defined your api key
+run the application
+```
+python app.py
+```
+Once loaded, the localhost server address will be displayed.
+Navigate to the address in a browser
+
+
+output data will be displayed in terminal
+
+tbc
 
 # Authors
 
