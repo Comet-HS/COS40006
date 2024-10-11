@@ -7,11 +7,14 @@ class TextToSpeechElement(aiko.PipelineElement):
     import logging
 
 class TextToSpeechElement(aiko.PipelineElement):
-    def __init__(self, context):
+    def __init__(self, context=None):
         # Initialize the TTS engine and set protocol
         self.engine = pyttsx3.init()  # Initialize the TTS engine
-        context.set_protocol("text_to_speech:0")
-        context.get_implementation("PipelineElement").__init__(self, context)
+        
+        # Check if context is provided before calling its methods
+        if context is not None:
+            context.set_protocol("text_to_speech:0")
+            context.get_implementation("PipelineElement").__init__(self, context)
         
         # Initialize logger with a fallback to a basic logger
         self.logger = getattr(context, 'logger', logging.getLogger(__name__))

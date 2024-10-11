@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from flask import Flask, render_template, request, jsonify
+import sys
 import os
 import queue
 from threading import Thread
@@ -8,6 +9,10 @@ import logging
 import json
 
 import aiko_services as aiko
+elements_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'elements'))
+sys.path.append(elements_path)
+
+from text_to_speech_element import TextToSpeechElement
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -19,6 +24,8 @@ STREAM_ID = "*"
 app = Flask(__name__, static_folder='static')
 
 reminders = []
+
+tts_element = TextToSpeechElement(None)
 
 def create_pipeline(definition_pathname, name):
     if not os.path.exists(definition_pathname):
@@ -32,11 +39,11 @@ def create_pipeline(definition_pathname, name):
     pipeline = aiko.PipelineImpl.create_pipeline(
         definition_pathname, pipeline_definition, name, stream_id,
         stream_parameters=(), frame_id=0, frame_data=None, grace_time=3600,
-        queue_response=response_queue)
+        )
     thread = Thread(target=pipeline.run)
     thread.daemon = True
     thread.start()
-    return pipeline, response_queue
+    return pipeline,
 
 def process_request(pipeline, response_queue, request):
     try:
@@ -51,7 +58,8 @@ def process_request(pipeline, response_queue, request):
         # Check if there's a reminder to add
         if parsed_response.get('reminder_details'):
             add_reminder(parsed_response['reminder_details'])
-        
+            
+        tts_element.speak_text(parsed_response['response'])
         return parsed_response
     except Exception as e:
         logger.error(f"Error processing request: {str(e)}", exc_info=True)
