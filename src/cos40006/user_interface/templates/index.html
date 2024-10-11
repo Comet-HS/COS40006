@@ -16,6 +16,8 @@
             <input type="text" id="user-input" name="user_input" placeholder="Type your message here..." required>
             <button type="submit">Send</button>
         </form>
+        <button id="record-button">Hold to Talk</button>
+        <p id="recording-status">Press and hold the button to start recording.</p>
         <div id="reminders-container">
             <h2>Reminders</h2>
             <ul id="reminders-list">
@@ -28,48 +30,58 @@
 
     <script>
         $(document).ready(function() {
-            $('#chat-form').on('submit', function(e) {
-                e.preventDefault();
-                var userInput = $('#user-input').val();
-                $('#chat-container').append('<div class="user-message"><span>You:</span> ' + userInput + '</div>');
-                $('#user-input').val('');
+            let mediaRecorder;
+            let audioChunks = [];
 
-                $.ajax({
-                    url: '/chat',
-                    method: 'POST',
-                    data: { user_input: userInput },
-                    success: function(response) {
-                        console.log(response);  // Log the response for debugging
-                        var parsedResponse = response.response;
-                        if (parsedResponse.error) {
-                            $('#chat-container').append('<div class="error-message">' + parsedResponse.response + '</div>');
-                        } else {
-                            $('#chat-container').append('<div class="assistant-message"><span>Assistant:</span> ' + parsedResponse.response + '</div>');
-                            
-                            if (parsedResponse.reminder_details) {
-                                $('#chat-container').append('<div class="system-message">Reminder added.</div>');
-                                updateReminders(response.reminders);
-                            }
-                            
-                            if (parsedResponse.emotion_details) {
-                                $('#chat-container').append('<div class="emotion-message"><span>Emotion detected:</span> ' + parsedResponse.emotion_details.emotion + ' (Confidence: ' + parsedResponse.emotion_details.confidence + ')</div>');
-                            }
-                        }
-                        
-                        $('#chat-container').scrollTop($('#chat-container')[0].scrollHeight);
-                    },
-                    error: function() {
-                        $('#chat-container').append('<div class="error-message">Error: Unable to process your request.</div>');
-                    }
-                });
+            $('#record-button').on('mousedown', function() {
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        mediaRecorder = new MediaRecorder(stream);
+                        mediaRecorder.start();
+                        audioChunks = [];
+
+                        mediaRecorder.ondataavailable = event => {
+                            audioChunks.push(event.data);
+                        };
+
+                        mediaRecorder.onstop = () => {
+                            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                            const formData = new FormData();
+                            formData.append('audio', audioBlob, 'speech.wav');
+
+                            // Send the audio data to the backend
+                            $.ajax({
+                                url: '/process_audio',
+                                method: 'POST',
+                                data: formData,
+                                processData: false,
+                                contentType: false,
+                                success: function(response) {
+                                    if (response.recognized_text) {
+                                        $('#chat-container').append('<div class="assistant-message"><span>Recognized Speech:</span> ' + response.recognized_text + '</div>');
+                                    } else {
+                                        $('#chat-container').append('<div class="error-message">Error recognizing speech: ' + response.error + '</div>');
+                                    }
+                                },
+                                error: function() {
+                                    $('#chat-container').append('<div class="error-message">Error: Unable to process your audio.</div>');
+                                }
+                            });
+                        };
+
+                        $('#recording-status').text('Recording...');
+                    })
+                    .catch(error => {
+                        console.error('Error accessing microphone:', error);
+                    });
             });
 
-            function updateReminders(reminders) {
-                $('#reminders-list').empty();
-                reminders.forEach(function(reminder) {
-                    $('#reminders-list').append('<li>' + reminder + '</li>');
-                });
-            }
+            $('#record-button').on('mouseup', function() {
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                    $('#recording-status').text('Press and hold the button to start recording.');
+                }
+            });
         });
     </script>
 </body>

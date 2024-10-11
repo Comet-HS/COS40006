@@ -7,6 +7,7 @@ import queue
 import logging
 import json
 import aiko_services as aiko
+import speech_recognition as sr
 
 # Ensure the elements module path is accessible
 elements_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'elements'))
@@ -66,48 +67,37 @@ def add_reminder(reminder_details):
     reminders.append(formatted_reminder)
     logger.info(f"Added reminder: {formatted_reminder}")
 
-def create_speech_to_text_thread():
-    def speech_to_text_loop():
-        while True:
-            result_event, result_data = stt_element.process_frame({"stream_id": STREAM_ID})
-            recognized_text = result_data.get('recognized_text')
-            if recognized_text:
-                logger.info(f"Recognized text: {recognized_text}")
-                
-                # Call process_request when speech is recognized
-                pipeline, response_queue = app.config["pipeline"]
-                request = {"text": recognized_text}
-                process_request(pipeline, response_queue, request)
-            
-            # Sleep to prevent excessive CPU usage
-            time.sleep(1)
-
-    thread = threading.Thread(target=speech_to_text_loop)
-    thread.daemon = True
-    thread.start()
-    logger.info("Speech-to-text thread started.")
-
 @app.route('/')
 def index():
     return render_template('index.html', reminders=reminders)
 
-@app.route('/chat', methods=['POST'])
-def chat():
-    user_input = request.form.get('user_input')
-    if user_input:
-        pipeline, response_queue = app.config["pipeline"]
-        result = process_request(pipeline, response_queue, {"text": user_input})
-        return jsonify({"response": result, "reminders": reminders})
-    return jsonify({"error": "No input provided"}), 400
+@app.route('/process_audio', methods=['POST'])
+def process_audio():
+    if 'audio' not in request.files:
+        return jsonify({'error': 'No audio file provided'}), 400
+
+    audio_file = request.files['audio']
+    try:
+        # Convert the audio file into a format suitable for processing
+        recognizer = sr.Recognizer()
+        with sr.AudioFile(audio_file) as source:
+            recognizer.adjust_for_ambient_noise(source)
+            audio = recognizer.record(source)
+
+        # Use the recognizer to transcribe the audio
+        recognized_text = recognizer.recognize_google(audio)
+        return jsonify({'recognized_text': recognized_text})
+    except sr.UnknownValueError:
+        return jsonify({'recognized_text': 'Could not understand the audio'}), 200
+    except sr.RequestError as e:
+        return jsonify({'error': f'Error with speech recognition service: {e}'}), 500
+    except Exception as e:
+        logger.error(f"Error processing audio file: {e}")
+        return jsonify({'error': 'Audio file could not be read as PCM WAV, AIFF/AIFF-C, or Native FLAC; check if file is corrupted or in another format'}), 500
 
 if __name__ == '__main__':
-    if __name__ == '__main__':
-    # Create the pipeline first
-     pipeline_config = create_pipeline(DEFINITION_PATHNAME, PIPELINE_NAME)
+    pipeline_config = create_pipeline(DEFINITION_PATHNAME, PIPELINE_NAME)
     app.config["pipeline"] = pipeline_config
-
-    # Start the speech-to-text thread after the pipeline is set up
-    create_speech_to_text_thread()
 
     # Run the Flask app
     app.run(debug=True)
