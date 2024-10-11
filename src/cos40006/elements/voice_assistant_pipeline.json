@@ -3,8 +3,9 @@
   "name": "voice_assistant_pipeline",
   "runtime": "python",
   "graph": [
-    "(SpeechToTextElement LLMElement)",
-    "(LLMElement ReminderSubsystemElement EmotionDetectionElement TextToSpeechElement)"
+    "(SpeechToTextElement PipelineOrchestrator)",
+    "(PipelineOrchestrator LLMElement ReminderSubsystemElement EmotionDetectionElement)",
+    "(PipelineOrchestrator TextToSpeechElement)"
   ],
   "parameters": {
     "input_audio": "set a reminder for tomorrow"
@@ -18,6 +19,12 @@
       "parameters": {
         "audio": "{input_audio}"
       }
+    },
+    {
+      "name": "PipelineOrchestrator",
+      "input": [{"name": "text", "type": "str"}],
+      "output": [{"name": "orchestrated_response", "type": "dict"}],
+      "deploy": {"local": {"module": "pipeline_orchestrator.py"}}
     },
     {
       "name": "LLMElement",

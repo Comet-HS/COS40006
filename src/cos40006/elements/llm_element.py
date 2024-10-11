@@ -18,7 +18,7 @@ class LLMElement(aiko.PipelineElement):
 
     def initialize_assistant(self):
         system_prompt = """
-        You are a helpful voice assistant in the form of a robot dog. Your capabilities include:
+        You are a helpful voice assistant. Your capabilities include:
         1. Setting reminders
         2. Detecting emotions in text
         3. Answering general questions
