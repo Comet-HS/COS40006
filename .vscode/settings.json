@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./src/cos40006/elements"
+    ]
+}
