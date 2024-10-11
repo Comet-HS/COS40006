@@ -1,67 +1,61 @@
 import aiko_services as aiko
 import speech_recognition as sr
 from googletrans import Translator
-import logging
-from typing import Tuple
-
-# Initialize logging for this script
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-class ElementDefinition:
-    """ Mimic the structure expected for element definitions. """
-    def __init__(self, input, output):
-        self.input = input
-        self.output = output
+from typing import Tuple, Any
 
 class SpeechToTextElement(aiko.PipelineElement):
     def __init__(self, context):
-        super().__init__()  # Correct parent class initialization
-        
-        # Define the input/output structure expected by Aiko
-        self.definition = ElementDefinition(
-            input=[{'name': 'audio_input', 'type': 'audio'}],
-            output=[{'name': 'recognized_text', 'type': 'str'}]
-        )
-        
-        # Set up the recognizer and translator
+        if context:
+            context.set_protocol("speech_to_text:0")
+            context.get_implementation("PipelineElement").__init__(self, context)
         self.recognizer = sr.Recognizer()
         self.translator = Translator()
-        logger.info("SpeechToTextElement has been initialized.")
 
-    def process_frame(self, stream, frame=None, **kwargs) -> Tuple[aiko.StreamEvent, dict]:
-        logger.info("process_frame() called")
+    def process_frame(self, stream: Any, frame: dict = None, **kwargs) -> Tuple[aiko.StreamEvent, dict]:
+        # Get audio input from the frame
+        audio_input = frame.get("audio_input", None)
+        if not audio_input:
+            self.logger.info("No audio input provided.")
+            return aiko.StreamEvent.OKAY, frame
+
+        self.logger.info("Processing audio input...")
+
         try:
-            with sr.Microphone() as source:
-                logger.info("Microphone initialized. Adjusting for ambient noise...")
-                self.recognizer.adjust_for_ambient_noise(source, duration=0.5)
-                logger.info("Listening for speech...")
+            # Simulate speech recognition (replace this with actual audio processing if needed)
+            recognized_text = self.recognizer.recognize_google(audio_input, language="en-US")
+            translated_text = self.translator.translate(recognized_text, src="en", dest="en").text
 
-                # Capture audio with a timeout and phrase time limit
-                audio_data = self.recognizer.listen(source, timeout=10, phrase_time_limit=10)
-                logger.info("Audio has been captured.")
+            self.logger.info(f"Recognized: {recognized_text}, Translated: {translated_text}")
+            return aiko.StreamEvent.OKAY, {"text_output": translated_text}
 
-                # Recognize speech
-                recognized_text = self.recognizer.recognize_google(audio_data)
-                logger.info(f"Recognized text: {recognized_text}")
-
-                # Translate the recognized text
-                translated_text = self.translator.translate(recognized_text, dest='en').text
-                logger.info(f"Translated text: {translated_text}")
-
-                # Return the recognized text and translated text
-                return aiko.StreamEvent.OKAY, {"recognized_text": recognized_text, "translated_text": translated_text}
-
-        except sr.WaitTimeoutError:
-            logger.error("Listening timed out while waiting for phrase to start.")
-            return aiko.StreamEvent.ERROR, {"recognized_text": "Error: Timeout"}
         except sr.UnknownValueError:
-            logger.error("Could not understand the audio.")
-            return aiko.StreamEvent.ERROR, {"recognized_text": "Error: Unknown Value"}
+            self.logger.error("Could not understand the audio.")
         except sr.RequestError as e:
-            logger.error(f"Error with Google Web API: {e}")
-            return aiko.StreamEvent.ERROR, {"recognized_text": f"Error: {e}"}
+            self.logger.error(f"Speech recognition request failed: {e}")
 
-# Required method for Aiko framework
-def get_implementations():
-    return {"SpeechToTextElement": SpeechToTextElement}
+        return aiko.StreamEvent.OKAY, frame
+
+    # Empty implementations for abstract methods
+    def add_message_handler(self, *args, **kwargs): pass
+    def add_tags(self, *args, **kwargs): pass
+    def add_tags_string(self, *args, **kwargs): pass
+    def create_frame(self, *args, **kwargs): pass
+    def create_frames(self, *args, **kwargs): pass
+    def get_parameter(self, *args, **kwargs): pass
+    def get_stream(self, *args, **kwargs): pass
+    def get_stream_parameters(self, *args, **kwargs): pass
+    def get_tags_string(self, *args, **kwargs): pass
+    def my_id(self, *args, **kwargs): pass
+    def registrar_handler_call(self, *args, **kwargs): pass
+    def remove_message_handler(self, *args, **kwargs): pass
+    def run(self, *args, **kwargs): pass
+    def set_registrar_handler(self, *args, **kwargs): pass
+    def start_stream(self, *args, **kwargs): pass
+    def stop(self, *args, **kwargs): pass
+    def stop_stream(self, *args, **kwargs): pass
+
+if __name__ == "__main__":
+    # Bypass the context for standalone testing
+    context = None  # Set to None when testing outside the Aiko system
+    element = SpeechToTextElement(context)
+    print("SpeechToTextElement loaded successfully")
