@@ -7,6 +7,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Add this to your existing styles */
+        .delete-reminder {
+            color: red;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -28,7 +36,10 @@
             <h2>Reminders</h2>
             <ul id="reminders-list">
                 {% for reminder in reminders %}
-                    <li>{{ reminder }}</li>
+                    <li>
+                        {{ reminder.split(': ', 1)[1] }}
+                        <span class="delete-reminder" data-id="{{ reminder.split(':')[0] }}">&times;</span>
+                    </li>
                 {% endfor %}
             </ul>
         </div>
@@ -84,9 +95,35 @@
             function updateReminders(reminders) {
                 $('#reminders-list').empty();
                 reminders.forEach(function(reminder) {
-                    $('#reminders-list').append('<li>' + reminder + '</li>');
+                    var parts = reminder.split(': ');
+                    var id = parts[0];
+                    var text = parts[1];
+                    $('#reminders-list').append(
+                        '<li>' + text + 
+                        ' <span class="delete-reminder" data-id="' + id + '">&times;</span></li>'
+                    );
                 });
             }
+
+            // Add click event for delete buttons
+            $(document).on('click', '.delete-reminder', function() {
+                var reminderId = $(this).data('id');
+                $.ajax({
+                    url: '/delete_reminder',
+                    method: 'POST',
+                    data: { reminder_id: reminderId },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            updateReminders(response.reminders);
+                        } else {
+                            alert('Error deleting reminder: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Error deleting reminder. Please try again.');
+                    }
+                });
+            });
 
             // Function to fetch new notifications from the server
             function fetchNotifications() {

@@ -15,6 +15,7 @@ import io
 import base64
 
 import aiko_services as aiko
+from cos40006.database_setup import get_db_path
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -32,13 +33,8 @@ notifications = []  # Create a global notifications list
 # Reminder Subsystem Element class for handling reminders and notifications
 class ReminderSubsystemElement:
     def __init__(self):
-        # Use the correct path for the database
-        self.db_path = os.path.join(os.path.dirname(__file__), '../reminder_data.db')
-
-        # Create the reminders table if it doesn't exist
+        self.db_path = get_db_path()
         self.create_reminders_table()
-
-        # Start the reminder checking thread
         self.thread = threading.Thread(target=self.reminder_check_loop, daemon=True)
         self.thread.start()
 
@@ -178,6 +174,11 @@ def add_reminder(reminder_details):
 
 @app.route('/')
 def index():
+    connection = sqlite3.connect(reminder_subsystem.db_path)
+    cursor = connection.cursor()
+    cursor.execute('SELECT id, text, time FROM reminders ORDER BY time')
+    reminders = [f"{row[0]}: {row[2]} - {row[1]}" for row in cursor.fetchall()]
+    connection.close()
     return render_template('index.html', reminders=reminders)
 
 
@@ -269,6 +270,31 @@ def process_audio():
     except Exception as e:
         logger.error(f"Error processing audio: {str(e)}", exc_info=True)
         return jsonify({"error": str(e), "response": "I apologize, but I encountered an error processing your audio. Could you please try again?"}), 400
+
+
+@app.route('/delete_reminder', methods=['POST'])
+def delete_reminder():
+    reminder_id = request.form.get('reminder_id')
+    if reminder_id:
+        try:
+            connection = sqlite3.connect(get_db_path())
+            cursor = connection.cursor()
+            
+            cursor.execute('DELETE FROM reminders WHERE id = ?', (reminder_id,))
+            connection.commit()
+            
+            # Fetch updated reminders
+            cursor.execute('SELECT id, text, time FROM reminders ORDER BY time')
+            reminders = [f"{row[0]}: {row[2]} - {row[1]}" for row in cursor.fetchall()]
+            
+            connection.close()
+            
+            return jsonify({"status": "success", "reminders": reminders})
+        except Exception as e:
+            logger.error(f"Error deleting reminder: {str(e)}")
+            return jsonify({"status": "error", "message": str(e)}), 500
+    else:
+        return jsonify({"status": "error", "message": "No reminder ID provided"}), 400
 
 
 if __name__ == '__main__':
