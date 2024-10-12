@@ -254,7 +254,12 @@ def process_audio():
         if result.get("emotion_details"):
             emotion_details = result["emotion_details"]
         
-        return jsonify({"response": result, "reminders": reminders, "emotion_details": emotion_details})
+        return jsonify({
+            "response": result,
+            "reminders": reminders,
+            "emotion_details": emotion_details,
+            "transcribed_text": text  # Include the transcribed text in the response
+        })
     except Exception as e:
         logger.error(f"Error processing audio: {str(e)}", exc_info=True)
         return jsonify({"error": str(e), "response": "I apologize, but I encountered an error processing your audio. Could you please try again?"}), 400

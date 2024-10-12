@@ -214,13 +214,16 @@
                         contentType: 'application/json',
                         data: JSON.stringify({ audio: base64Audio }),
                         success: function(response) {
-                            var parsedResponse = response.response;
-                            if (parsedResponse.error) {
-                                $('#chat-container').append('<div class="error-message">' + parsedResponse.response + '</div>');
+                            if (response.error) {
+                                $('#chat-container').append('<div class="error-message">' + response.error + '</div>');
                             } else {
+                                // Display the transcribed text in the chat
+                                displayTranscribedText(response.transcribed_text);
+
+                                // Process the AI response
+                                var parsedResponse = response.response;
                                 $('#chat-container').append('<div class="assistant-message"><span>Assistant:</span> ' + parsedResponse.response + '</div>');
 
-                                // Handle emotion details as a pop-up under the chat message
                                 if (response.emotion_details) {
                                     var emotion = response.emotion_details.emotion;
                                     var confidence = response.emotion_details.confidence;
@@ -239,6 +242,11 @@
                         }
                     });
                 };
+            }
+
+            function displayTranscribedText(text) {
+                $('#chat-container').append('<div class="user-message"><span>You (voice):</span> ' + text + '</div>');
+                $('#chat-container').scrollTop($('#chat-container')[0].scrollHeight);
             }
         });
     </script>
