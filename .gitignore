@@ -3,3 +3,4 @@ venv/
 __pycache__/
 *.py[cod]
 cos40006.egg-info/
+reminder_data.db
