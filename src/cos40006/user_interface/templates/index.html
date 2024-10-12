@@ -7,6 +7,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Add this to your existing styles */
+        .delete-reminder {
+            color: red;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -28,7 +36,10 @@
             <h2>Reminders</h2>
             <ul id="reminders-list">
                 {% for reminder in reminders %}
-                    <li>{{ reminder }}</li>
+                    <li>
+                        {{ reminder.split(': ', 1)[1] }}
+                        <span class="delete-reminder" data-id="{{ reminder.split(':')[0] }}">&times;</span>
+                    </li>
                 {% endfor %}
             </ul>
         </div>
@@ -45,13 +56,21 @@
                 $.ajax({
                     url: '/chat',
                     method: 'POST',
-                    data: { user_input: userInput },
+                    data: { 
+                        user_input: userInput,
+                        speak_response: true  // Always request spoken response
+                    },
                     success: function(response) {
                         var parsedResponse = response.response;
                         if (parsedResponse.error) {
                             $('#chat-container').append('<div class="error-message">' + parsedResponse.response + '</div>');
                         } else {
                             $('#chat-container').append('<div class="assistant-message"><span>Assistant:</span> ' + parsedResponse.response + '</div>');
+                            
+                            // Speak the response
+                            if (response.speak_response) {
+                                speakText(parsedResponse.response);
+                            }
 
                             // Handle emotion details as a pop-up under the chat message
                             if (response.emotion_details) {
@@ -76,9 +95,35 @@
             function updateReminders(reminders) {
                 $('#reminders-list').empty();
                 reminders.forEach(function(reminder) {
-                    $('#reminders-list').append('<li>' + reminder + '</li>');
+                    var parts = reminder.split(': ');
+                    var id = parts[0];
+                    var text = parts[1];
+                    $('#reminders-list').append(
+                        '<li>' + text + 
+                        ' <span class="delete-reminder" data-id="' + id + '">&times;</span></li>'
+                    );
                 });
             }
+
+            // Add click event for delete buttons
+            $(document).on('click', '.delete-reminder', function() {
+                var reminderId = $(this).data('id');
+                $.ajax({
+                    url: '/delete_reminder',
+                    method: 'POST',
+                    data: { reminder_id: reminderId },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            updateReminders(response.reminders);
+                        } else {
+                            alert('Error deleting reminder: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Error deleting reminder. Please try again.');
+                    }
+                });
+            });
 
             // Function to fetch new notifications from the server
             function fetchNotifications() {
@@ -217,12 +262,15 @@
                             if (response.error) {
                                 $('#chat-container').append('<div class="error-message">' + response.error + '</div>');
                             } else {
-                                // Display the transcribed text in the chat
                                 displayTranscribedText(response.transcribed_text);
 
-                                // Process the AI response
                                 var parsedResponse = response.response;
                                 $('#chat-container').append('<div class="assistant-message"><span>Assistant:</span> ' + parsedResponse.response + '</div>');
+                                
+                                // Speak the response
+                                if (response.speak_response) {
+                                    speakText(parsedResponse.response);
+                                }
 
                                 if (response.emotion_details) {
                                     var emotion = response.emotion_details.emotion;
@@ -247,6 +295,16 @@
             function displayTranscribedText(text) {
                 $('#chat-container').append('<div class="user-message"><span>You (voice):</span> ' + text + '</div>');
                 $('#chat-container').scrollTop($('#chat-container')[0].scrollHeight);
+            }
+
+            // Add this new function for text-to-speech
+            function speakText(text) {
+                if ('speechSynthesis' in window) {
+                    var utterance = new SpeechSynthesisUtterance(text);
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    console.error('Text-to-speech not supported in this browser.');
+                }
             }
         });
     </script>
