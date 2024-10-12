@@ -43,22 +43,27 @@ def create_pipeline(definition_pathname, name):
     thread = Thread(target=pipeline.run)
     thread.daemon = True
     thread.start()
-    return pipeline,
+    return pipeline, response_queue
 
 def process_request(pipeline, response_queue, request):
     try:
         stream = {"stream_id": STREAM_ID}
         pipeline.process_frame(stream, request)
         response = response_queue.get()[1]
+        logger.debug(f"Response from pipeline: {response}")
+        
         if isinstance(response, dict) and 'response' in response:
             parsed_response = json.loads(response['response'])
+            logger.debug(f"Parsed response: {parsed_response}")    
         else:
             raise ValueError("Unexpected response format")
+        logger.info(f"Parsed response: {parsed_response}")
         
         # Check if there's a reminder to add
         if parsed_response.get('reminder_details'):
             add_reminder(parsed_response['reminder_details'])
             
+        logger.debug(f"Sending text to TTS: {parsed_response['response']}")    
         tts_element.speak_text(parsed_response['response'])
         return parsed_response
     except Exception as e:

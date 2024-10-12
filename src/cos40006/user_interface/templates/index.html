@@ -40,7 +40,7 @@
                     data: { user_input: userInput },
                     success: function(response) {
                         console.log(response);  // Log the response for debugging
-                        var parsedResponse = response.response;
+                        var parsedResponse = response;
                         if (parsedResponse.error) {
                             $('#chat-container').append('<div class="error-message">' + parsedResponse.response + '</div>');
                         } else {
