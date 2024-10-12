@@ -16,6 +16,7 @@ import base64
 
 import aiko_services as aiko
 from cos40006.database_setup import get_db_path
+from cos40006.elements.reminder_subsystem_element import notifications
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
