@@ -15,6 +15,8 @@
         <form id="chat-form">
             <input type="text" id="user-input" name="user_input" placeholder="Type your message here..." required>
             <button type="submit">Send</button>
+            <!-- Add the microphone button here -->
+            <button type="button" id="micButton">Hold to Speak</button>
         </form>
 
         <div id="notifications-container">
@@ -96,6 +98,156 @@
 
             // Poll for new notifications every 5 seconds
             setInterval(fetchNotifications, 5000);
+
+            // Add the following code for microphone functionality
+            let mediaRecorder;
+            let audioChunks = [];
+
+            const micButton = document.getElementById('micButton');
+
+            micButton.addEventListener('mousedown', startRecording);
+            micButton.addEventListener('mouseup', stopRecording);
+            micButton.addEventListener('mouseleave', stopRecording);
+
+            function startRecording() {
+                audioChunks = [];
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                        mediaRecorder.start();
+
+                        mediaRecorder.addEventListener("dataavailable", event => {
+                            audioChunks.push(event.data);
+                        });
+                    });
+            }
+
+            function stopRecording() {
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                    mediaRecorder.addEventListener("stop", () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        convertToWav(audioBlob).then(wavBlob => {
+                            sendAudioToServer(wavBlob);
+                        });
+                    });
+                }
+            }
+
+            function convertToWav(blob) {
+                return new Promise((resolve, reject) => {
+                    const fileReader = new FileReader();
+                    fileReader.onloadend = () => {
+                        const arrayBuffer = fileReader.result;
+                        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        audioContext.decodeAudioData(arrayBuffer, (buffer) => {
+                            const wavBlob = bufferToWav(buffer);
+                            resolve(wavBlob);
+                        }, reject);
+                    };
+                    fileReader.readAsArrayBuffer(blob);
+                });
+            }
+
+            function bufferToWav(buffer) {
+                const numOfChan = buffer.numberOfChannels;
+                const length = buffer.length * numOfChan * 2 + 44;
+                const arrayBuffer = new ArrayBuffer(length);
+                const view = new DataView(arrayBuffer);
+                const channels = [];
+                let sample;
+                let offset = 0;
+                let pos = 0;
+
+                // write WAVE header
+                setUint32(0x46464952);                         // "RIFF"
+                setUint32(length - 8);                         // file length - 8
+                setUint32(0x45564157);                         // "WAVE"
+
+                setUint32(0x20746d66);                         // "fmt " chunk
+                setUint32(16);                                 // length = 16
+                setUint16(1);                                  // PCM (uncompressed)
+                setUint16(numOfChan);
+                setUint32(buffer.sampleRate);
+                setUint32(buffer.sampleRate * 2 * numOfChan);  // avg. bytes/sec
+                setUint16(numOfChan * 2);                      // block-align
+                setUint16(16);                                 // 16-bit (hardcoded in this demo)
+
+                setUint32(0x61746164);                         // "data" - chunk
+                setUint32(length - pos - 4);                   // chunk length
+
+                // write interleaved data
+                for(let i = 0; i < buffer.numberOfChannels; i++)
+                    channels.push(buffer.getChannelData(i));
+
+                while(pos < length) {
+                    for(let i = 0; i < numOfChan; i++) {
+                        sample = Math.max(-1, Math.min(1, channels[i][offset]));
+                        sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0;
+                        view.setInt16(pos, sample, true);
+                        pos += 2;
+                    }
+                    offset++
+                }
+
+                return new Blob([arrayBuffer], { type: "audio/wav" });
+
+                function setUint16(data) {
+                    view.setUint16(pos, data, true);
+                    pos += 2;
+                }
+
+                function setUint32(data) {
+                    view.setUint32(pos, data, true);
+                    pos += 4;
+                }
+            }
+
+            function sendAudioToServer(audioBlob) {
+                const reader = new FileReader();
+                reader.readAsDataURL(audioBlob);
+                reader.onloadend = () => {
+                    const base64Audio = reader.result;
+                    $.ajax({
+                        url: '/process_audio',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ audio: base64Audio }),
+                        success: function(response) {
+                            if (response.error) {
+                                $('#chat-container').append('<div class="error-message">' + response.error + '</div>');
+                            } else {
+                                // Display the transcribed text in the chat
+                                displayTranscribedText(response.transcribed_text);
+
+                                // Process the AI response
+                                var parsedResponse = response.response;
+                                $('#chat-container').append('<div class="assistant-message"><span>Assistant:</span> ' + parsedResponse.response + '</div>');
+
+                                if (response.emotion_details) {
+                                    var emotion = response.emotion_details.emotion;
+                                    var confidence = response.emotion_details.confidence;
+                                    $('#chat-container').append('<div class="emotion-popup">Emotion detected: ' + emotion + ' (Confidence: ' + confidence + '%)</div>');
+                                }
+
+                                if (parsedResponse.reminder_details) {
+                                    $('#chat-container').append('<div class="system-message">Reminder added.</div>');
+                                    updateReminders(response.reminders);
+                                }
+                            }
+                            $('#chat-container').scrollTop($('#chat-container')[0].scrollHeight);
+                        },
+                        error: function() {
+                            $('#chat-container').append('<div class="error-message">Error: Unable to process your audio request.</div>');
+                        }
+                    });
+                };
+            }
+
+            function displayTranscribedText(text) {
+                $('#chat-container').append('<div class="user-message"><span>You (voice):</span> ' + text + '</div>');
+                $('#chat-container').scrollTop($('#chat-container')[0].scrollHeight);
+            }
         });
     </script>
 </body>

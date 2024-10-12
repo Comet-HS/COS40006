@@ -10,6 +10,9 @@ import sqlite3
 from datetime import datetime
 import time
 import threading  # Importing threading for the reminder loop
+import speech_recognition as sr
+import io
+import base64
 
 import aiko_services as aiko
 
@@ -222,10 +225,53 @@ def get_notifications():
     return jsonify({"notifications": new_notifications})
 
 
+@app.route('/process_audio', methods=['POST'])
+def process_audio():
+    try:
+        # Get the base64 encoded audio data from the request
+        audio_data_base64 = request.json['audio']
+        
+        # Decode the base64 audio data
+        audio_data = base64.b64decode(audio_data_base64.split(',')[1])
+        
+        # Create a speech recognition object
+        recognizer = sr.Recognizer()
+        
+        # Convert the audio data to an AudioFile
+        with io.BytesIO(audio_data) as audio_file:
+            with sr.AudioFile(audio_file) as source:
+                audio = recognizer.record(source)
+        
+        # Perform speech recognition
+        text = recognizer.recognize_google(audio)
+        
+        # Process the recognized text through the pipeline
+        pipeline, response_queue = app.config["pipeline"]
+        result = process_request(pipeline, response_queue, {"text": text})
+        
+        # Extract emotion details from the result if present
+        emotion_details = None
+        if result.get("emotion_details"):
+            emotion_details = result["emotion_details"]
+        
+        return jsonify({
+            "response": result,
+            "reminders": reminders,
+            "emotion_details": emotion_details,
+            "transcribed_text": text  # Include the transcribed text in the response
+        })
+    except Exception as e:
+        logger.error(f"Error processing audio: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e), "response": "I apologize, but I encountered an error processing your audio. Could you please try again?"}), 400
+
+
 if __name__ == '__main__':
     # Create the pipeline
     pipeline_config = create_pipeline(DEFINITION_PATHNAME, PIPELINE_NAME)
     app.config["pipeline"] = pipeline_config
+
+    # Install required packages
+    os.system('pip install SpeechRecognition')
 
     # Start the Flask app
     app.run(debug=True)
