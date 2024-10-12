@@ -45,13 +45,21 @@
                 $.ajax({
                     url: '/chat',
                     method: 'POST',
-                    data: { user_input: userInput },
+                    data: { 
+                        user_input: userInput,
+                        speak_response: true  // Always request spoken response
+                    },
                     success: function(response) {
                         var parsedResponse = response.response;
                         if (parsedResponse.error) {
                             $('#chat-container').append('<div class="error-message">' + parsedResponse.response + '</div>');
                         } else {
                             $('#chat-container').append('<div class="assistant-message"><span>Assistant:</span> ' + parsedResponse.response + '</div>');
+                            
+                            // Speak the response
+                            if (response.speak_response) {
+                                speakText(parsedResponse.response);
+                            }
 
                             // Handle emotion details as a pop-up under the chat message
                             if (response.emotion_details) {
@@ -217,12 +225,15 @@
                             if (response.error) {
                                 $('#chat-container').append('<div class="error-message">' + response.error + '</div>');
                             } else {
-                                // Display the transcribed text in the chat
                                 displayTranscribedText(response.transcribed_text);
 
-                                // Process the AI response
                                 var parsedResponse = response.response;
                                 $('#chat-container').append('<div class="assistant-message"><span>Assistant:</span> ' + parsedResponse.response + '</div>');
+                                
+                                // Speak the response
+                                if (response.speak_response) {
+                                    speakText(parsedResponse.response);
+                                }
 
                                 if (response.emotion_details) {
                                     var emotion = response.emotion_details.emotion;
@@ -247,6 +258,16 @@
             function displayTranscribedText(text) {
                 $('#chat-container').append('<div class="user-message"><span>You (voice):</span> ' + text + '</div>');
                 $('#chat-container').scrollTop($('#chat-container')[0].scrollHeight);
+            }
+
+            // Add this new function for text-to-speech
+            function speakText(text) {
+                if ('speechSynthesis' in window) {
+                    var utterance = new SpeechSynthesisUtterance(text);
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    console.error('Text-to-speech not supported in this browser.');
+                }
             }
         });
     </script>

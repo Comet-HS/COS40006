@@ -184,16 +184,21 @@ def index():
 @app.route('/chat', methods=['POST'])
 def chat():
     user_input = request.form.get('user_input')
+    speak_response = request.form.get('speak_response') == 'true'
     if user_input:
         pipeline, response_queue = app.config["pipeline"]
         result = process_request(pipeline, response_queue, {"text": user_input})
 
-        # Extract emotion details from the result if present
         emotion_details = None
         if result.get("emotion_details"):
             emotion_details = result["emotion_details"]
 
-        return jsonify({"response": result, "reminders": reminders, "emotion_details": emotion_details})
+        return jsonify({
+            "response": result,
+            "reminders": reminders,
+            "emotion_details": emotion_details,
+            "speak_response": speak_response
+        })
     return jsonify({"error": "No input provided"}), 400
 
 
@@ -258,7 +263,8 @@ def process_audio():
             "response": result,
             "reminders": reminders,
             "emotion_details": emotion_details,
-            "transcribed_text": text  # Include the transcribed text in the response
+            "transcribed_text": text,
+            "speak_response": True  # Always speak responses to voice input
         })
     except Exception as e:
         logger.error(f"Error processing audio: {str(e)}", exc_info=True)
