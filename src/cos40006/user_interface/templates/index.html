@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Assistant Chat</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
@@ -18,27 +19,26 @@
 </head>
 <body>
     <div class="container">
-        <h1>AI Assistant Chat</h1>
+        <h1><i class="fas fa-robot"></i> AI Assistant Chat</h1>
         <div id="chat-container"></div>
         <form id="chat-form">
             <input type="text" id="user-input" name="user_input" placeholder="Type your message here..." required>
-            <button type="submit">Send</button>
-            <!-- Add the microphone button here -->
-            <button type="button" id="micButton">Hold to Speak</button>
+            <button type="submit"><i class="fas fa-paper-plane"></i></button>
+            <button type="button" id="micButton"><i class="fas fa-microphone"></i></button>
         </form>
 
         <div id="notifications-container">
-            <h2>Notifications</h2>
+            <h2><i class="fas fa-bell"></i> Notifications</h2>
             <ul id="notifications-list"></ul>
         </div>
 
         <div id="reminders-container">
-            <h2>Reminders</h2>
+            <h2><i class="fas fa-calendar-alt"></i> Reminders</h2>
             <ul id="reminders-list">
                 {% for reminder in reminders %}
                     <li>
-                        {{ reminder.split(': ', 1)[1] }}
-                        <span class="delete-reminder" data-id="{{ reminder.split(':')[0] }}">&times;</span>
+                        <i class="fas fa-clock"></i> {{ reminder.split(': ', 1)[1] }}
+                        <span class="delete-reminder" data-id="{{ reminder.split(':')[0] }}"><i class="fas fa-trash-alt"></i></span>
                     </li>
                 {% endfor %}
             </ul>

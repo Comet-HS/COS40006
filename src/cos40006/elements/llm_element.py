@@ -5,7 +5,8 @@ import os
 import json
 import datetime
 
-genai.configure(api_key=os.environ["API_KEY"])
+# genai.configure(api_key=os.environ["API_KEY"])
+genai.configure(api_key="AIzaSyAk8sN9CnHiJr4FU4X7NZINXkA616hMDt4")
 
 class LLMElement(aiko.PipelineElement):
     def __init__(self, context):
